@@ -1,0 +1,23 @@
+
+Hara is a GTP go (igo, weiqi, baduk) engine written in C++.
+
+
+USAGE
+
+Hara runs as a console application and can be used with any go GUI that supports the GTP protocol.
+
+
+ALGORITHM
+
+The engine uses a Monte Carlo algorithm with AMAF, RAVE, MoGo patterns, ladder reading, and other heuristics.
+
+
+NAME
+
+Hara could refer to an early name of Shiva, that can be translated as "one who captivates", "one who consolidates", and "one who destroys". But truth is that it is only a pretty given name.
+
+
+COPYRIGHT
+
+This program was written by Antonio Garro, and is released under a permissive BSD license, so the code can be us ed and modified, as long as proper attribution is maintained. Please refer to the license in the source code for fur ther details. 
+The Mersenne Twister pseudorandom number generator was written by Makoto Matsumoto and Takuji Nishimura. See cop yright notice in random.h

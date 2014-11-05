@@ -31,211 +31,222 @@
 
 void GTP::protocol_version()
 {
-	response.append(PROTOCOLVERSION);
+  response.append(PROTOCOLVERSION);
 }
 
 void GTP::name()
 {
-	response.append(PROGNAME);
+  response.append(PROGNAME);
 }
 
 void GTP::version()
 {
-	response.append(PROGVERSION);
+  response.append(PROGVERSION);
 }
 
-bool GTP::known_command()
+void GTP::known_command()
 {
-	for(int i = 0; i < NCOMMANDS; i++){
-		if(!cmd_args[0].compare(COMMANDS[i])){
-			response.append("true");
-			return true;
-		}
-	}
-	response.append("false");
-	return false;
+  for(int i = 0; i < NCOMMANDS; i++){
+    if(!cmd_args[0].compare(COMMANDS[i])){
+      response.append("true");
+    }
+  }
+  response.append("false");
 }
 
 void GTP::list_commands()
 {
-	for (int i = 0; i < NCOMMANDS; i++){
-		response.append(COMMANDS[i]);
-		response.append("\n");
-	}
+  for (int i = 0; i < NCOMMANDS; i++){
+    response.append(COMMANDS[i]);
+    response.append("\n");
+  }
 }
 
 void GTP::quit()
 {
-	loop = false;
+  loop = false;
 }
 
 void GTP::boardsize()
 {
-	if(cmd_args.size() > 0){
-		if(cmd_int_args[0] != main_goban.set_size(cmd_int_args[0])){
-			response[0] = '?';
-			response.append("unacceptable size");
-		}
-		else go_engine.reset();
-	}
-	else{
-		response[0] = '?';
-		response.append("syntax error");
-	}
+  if(cmd_args.size() > 0){
+    if(cmd_int_args[0] != main_goban.set_size(cmd_int_args[0])){
+      response[0] = '?';
+      response.append("unacceptable size");
+    }
+    else go_engine.reset();
+  }
+  else{
+    response[0] = '?';
+    response.append("syntax error");
+  }
 }
 
 void GTP::clear_board()
 {
-	main_goban.clear();
-	go_engine.reset();
+  main_goban.clear();
+  go_engine.reset();
 }
 
 void GTP::komi()
 {
-	if(cmd_args.size() > 0){
-		main_goban.set_komi(cmd_int_args[0]);
-	}
-	else{
-		response[0] = '?';
-		response.append("syntax error");
-	}
+  if(cmd_args.size() > 0){
+    main_goban.set_komi(cmd_int_args[0]);
+  }
+  else{
+    response[0] = '?';
+    response.append("syntax error");
+  }
 }
 
 void GTP::play()
 {
-	int color, coord;
-	if(cmd_args.size() > 1){
-		color = char_to_color(cmd_args[0]);
-		coord = char_to_coordinate(cmd_args[1]);
-		
-		if(color > -1 && coord > -1){
-			//Check legality.
-			if(main_goban.play_move(coord, color) == -1){
-				response[0] = '?';
-				response.append("illegal move");
-			}
-			else go_engine.report_move(coord);
-		}
-		else{
-			response[0] = '?';
-			response.append("invalid color or coordinate");
-		}
-	}
-	else{
-		response[0] = '?';
-		response.append("syntax error");
-	}
+  int color, coord;
+  if(cmd_args.size() > 1){
+    color = char_to_color(cmd_args[0]);
+    coord = char_to_coordinate(cmd_args[1]);
+    
+    if(color > -1 && coord > -1){
+      //Check legality.
+      if(main_goban.play_move(coord, color) == -1){
+        response[0] = '?';
+        response.append("illegal move");
+      }
+      else go_engine.report_move(coord);
+    }
+    else{
+      response[0] = '?';
+      response.append("invalid color or coordinate");
+    }
+  }
+  else{
+    response[0] = '?';
+    response.append("syntax error");
+  }
 }
 
 void GTP::genmove()
 {
-	if(cmd_args.size() > 0){
-		bool color = char_to_color(cmd_args[0]);
-		if(color != main_goban.get_side()){
-			main_goban.play_move(0, !color);
-			go_engine.report_move(0);
-		}
-		int move = go_engine.generate_move();
-		main_goban.play_move(move, color);
-		go_engine.report_move(move);
-		print_coordinate(move);
-	}
-	else{
-		response[0] = '?';
-		response.append("syntax error");
-	}
-		
+  if(cmd_args.size() > 0){
+    bool color = char_to_color(cmd_args[0]);
+    if(color != main_goban.get_side()){
+      main_goban.play_move(0, !color);
+      go_engine.report_move(0);
+    }
+    int move = go_engine.generate_move();
+    main_goban.play_move(move, color);
+    go_engine.report_move(move);
+    print_coordinate(move);
+  }
+  else{
+    response[0] = '?';
+    response.append("syntax error");
+  }
+    
 }
 
 void GTP::unknown_command()
 {
-	response[0] = '?';
-	response.append("unknown_command");
+  response[0] = '?';
+  response.append("unknown_command");
 }
 
 void GTP::showboard()
 {
-	main_goban.print_goban();
+  main_goban.print_goban();
 }
 
 void GTP::fixed_handicap()
 {
-	
-	if(cmd_int_args.size() > 0 && cmd_int_args[0] > 1 && cmd_int_args[0] < 10){
-		if(main_goban.set_fixed_handicap(cmd_int_args[0]) != cmd_int_args[0]){
-		}
-	}
-	else{
-		response[0] = '?';
-		response.append("syntax error");
-	}
+  
+  if(cmd_int_args.size() > 0 && cmd_int_args[0] > 1 && cmd_int_args[0] < 10){
+    if(main_goban.set_fixed_handicap(cmd_int_args[0]) != cmd_int_args[0]){
+    }
+  }
+  else{
+    response[0] = '?';
+    response.append("syntax error");
+  }
 }
 
 void GTP::level()
 {
-	if(cmd_int_args.size() > 0 && cmd_int_args[0] > 0){
-		go_engine.set_playouts(10000*cmd_int_args[0]);
-	}
-	else{
-		response[0] = '?';
-		response.append("syntax error");
-	}
+  if(cmd_int_args.size() > 0 && cmd_int_args[0] > 0){
+    go_engine.set_playouts(10000*cmd_int_args[0]);
+  }
+  else{
+    response[0] = '?';
+    response.append("syntax error");
+  }
 }
 
 void GTP::time_settings()
 {
-	if(cmd_int_args.size() > 2){
-		go_engine.set_times(cmd_int_args[0], cmd_int_args[1], cmd_int_args[2]);
-	}
-	else{
-		response[0] = '?';
-		response.append("syntax error");
-	}
+  if(cmd_int_args.size() > 2){
+    go_engine.set_times(cmd_int_args[0], cmd_int_args[1], cmd_int_args[2]);
+  }
+  else{
+    response[0] = '?';
+    response.append("syntax error");
+  }
+}
+
+void GTP::kgs_time_settings()
+{
+  if (cmd_int_args.size() > 3
+      && (!cmd_args[0].compare("byoyomi")
+          || !cmd_args[0].compare("canadian"))) {
+    go_engine.set_times(cmd_int_args[1], cmd_int_args[2], cmd_int_args[3]);
+  } else if (cmd_int_args.size() > 1 && !cmd_args[0].compare("absolute")) {
+    go_engine.set_times(cmd_int_args[1], 0, 0);
+  } else if (cmd_int_args.size() > 0 && !cmd_args[0].compare("none")) {
+    go_engine.set_times(30, 0, 0); //To be adjusted.
+  } else {
+    response[0] = '?';
+    response.append("syntax error");
+  }
 }
 
 void GTP::time_left()
 {
-	if(cmd_args.size() > 2 && cmd_int_args.size() > 1){
-		go_engine.set_times(cmd_int_args[1], cmd_int_args[2]);
-	}
-	else{
-		response[0] = '?';
-		response.append("syntax error");
-	}
+  if (cmd_args.size() > 2 && cmd_int_args.size() > 1) {
+    go_engine.set_times(cmd_int_args[1], cmd_int_args[2]);
+  } else {
+    response[0] = '?';
+    response.append("syntax error");
+  }
 }
 
 void GTP::final_score()
 {
-	std::stringstream auxstream;
-	float score = go_engine.score();
-	
-	if(score > 0){
-		auxstream << score;
-		response.append("B+");
-		response.append(auxstream.str());
-	}
-	else{
-		auxstream << -score;
-		response.append("W+");
-		response.append(auxstream.str());
-	}
+  std::stringstream auxstream;
+  float score = go_engine.score(0);
+  
+  if (score > 0) {
+    auxstream << score;
+    response.append("B+");
+    response.append(auxstream.str());
+  } else {
+    auxstream << -score;
+    response.append("W+");
+    response.append(auxstream.str());
+  }
 
 }
 
 void GTP::final_status_list()
 {
-	if(cmd_args.size() > 0 && !cmd_args[0].compare("dead")){
-		std::vector<int> list;
-		go_engine.list_dead(list);
-		//TODO: support 'alive' status.
-		for(std::vector<int>::iterator it = list.begin(); it != list.end(); ++it){
-			coord_to_char(*it, response, main_goban.get_size());
-			response.append("\n");
-		}
-	}
-	else{
-		response[0] = '?';
-		response.append("syntax error");
-	}
+  if (cmd_args.size() > 0 && !cmd_args[0].compare("dead")) {
+    std::vector<int> list;
+    go_engine.score(&list);
+    //TODO: support 'alive' status.
+    for(std::vector<int>::iterator it = list.begin(); it != list.end(); ++it){
+      coord_to_char(*it, response, main_goban.get_size());
+      response.append("\n");
+    }
+  } else {
+    response[0] = '?';
+    response.append("syntax error");
+  }
 
 }

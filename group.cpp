@@ -31,65 +31,69 @@
 
 Group::Group()
 {
-	this->color = 0;
-	group_stones[0] = 0;
-	group_liberties[0] = 0;
-	nstones = 0;
-	nliberties = 0;
+  color = 0;
+  stones[0] = 0;
+  liberties[0] = 0;
+  nsts = 0;
+  nlibs = 0;
 }
-void Group::set_up(int point, bool color, const PList &new_liberties)
+
+void Group::set_up(int point, bool new_color, const PList &new_liberties)
 {
-	this->color = color;
-	nstones = 0;
-	group_stones[nstones++] = point;
-	group_stones[nstones] = 0;
-	nliberties = 0;
-	for(int i = 0; i < new_liberties.length(); i++){
-		group_liberties[nliberties++] = new_liberties[i];
-		group_liberties[nliberties] = 0;
-	}
+  color = new_color;
+  nsts = 0;
+  stones[nsts++] = point;
+  stones[nsts] = 0;
+  nlibs = 0;
+  for (int i = 0; i < new_liberties.length(); i++) {
+    liberties[nlibs++] = new_liberties[i];
+    liberties[nlibs] = 0;
+  }
 }
+
 int Group::add_liberties(int i)
 {
-	for (int j = 0; j < nliberties; j++){
-		if(group_liberties[j] == i) return 0;
-	}
-	group_liberties[nliberties++] = i;
-	group_liberties[nliberties] = 0;
-	return nliberties;
+  for (int j = 0; j < nlibs; j++) {
+    if (liberties[j] == i) return 0;
+  }
+  liberties[nlibs++] = i;
+  liberties[nlibs] = 0;
+  return nlibs;
 }
+
 int Group::erase_liberties(int lib)
 {
-	for (int j = 0; j < nliberties; j++){
-		if(group_liberties[j] == lib){
-			nliberties--;
-			group_liberties[j] = group_liberties[nliberties];
-			group_liberties[nliberties]  = 0;
-			return nliberties;
-		}
-	}
-	return 0;
+  for (int j = 0; j < nlibs; j++) {
+    if (liberties[j] == lib) {
+      liberties[j] = liberties[--nlibs];
+      liberties[nlibs]  = 0;
+      return nlibs;
+    }
+  }
+  return 0;
 }
+
 void Group::clear()
 {
-	nstones = 0;
-	group_stones[nstones] = 0;
-	nliberties = 0;
-	group_liberties[nliberties] = 0;
+  nsts = 0;
+  stones[nsts] = 0;
+  nlibs = 0;
+  liberties[nlibs] = 0;
 }
+
 void Group::attach_group(Group *attached)
-{	
-	for(int i = 0; i < attached->nstones; i++){
-		this->group_stones[nstones++] = attached->group_stones[i];
-		this->group_stones[nstones] = 0;
-	}
-	for(int i = 0; i < attached->nliberties; i++){
-		this->add_liberties(attached->group_liberties[i]);
-	}
+{  
+  for (int i = 0; i < attached->nsts; i++) {
+    this->stones[nsts++] = attached->stones[i];
+    this->stones[nsts] = 0;
+  }
+  for (int i = 0; i < attached->nlibs; i++) {
+    this->add_liberties(attached->liberties[i]);
+  }
 }
 void Group::print_group() const
 {
-	std::cerr << "Color: " << color;
-	for(int i = 0; i < nstones; i++) std::cerr << " " << group_stones[i];
-	std::cerr << "\n";
+  std::cerr << "Color: " << color;
+  for (int i = 0; i < nsts; i++) std::cerr << " " << stones[i];
+  std::cerr << "\n";
 }

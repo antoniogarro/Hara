@@ -34,18 +34,11 @@ Goban::Goban(int newsize)
   size2 = size*size;
   komi = 0.5;
   clear();
-  init_adjacent(newsize);
-  init_diagonals(newsize);
-  init_vicinity(newsize);
-  init_distance(newsize);
-  init_manhattan(newsize);
-}
-
-void Goban::clear()
-{
-  reset();
-  handicap = 0;
-  game_history.clear();
+  init_adjacent();
+  init_diagonals();
+  init_vicinity();
+  init_distance();
+  init_manhattan();
 }
 
 void Goban::reset()
@@ -71,6 +64,13 @@ void Goban::reset()
   }
 }
 
+void Goban::clear()
+{
+  reset();
+  handicap = 0;
+  game_history.clear();
+}
+
 void Goban::restore()
 {
   reset();
@@ -85,7 +85,7 @@ void Goban::restore()
   }
 }
 
-void Goban::init_adjacent(int newsize)
+void Goban::init_adjacent()
 {
   for (int k = 1; k <= size2; k++) {
     int nadj = 0;
@@ -105,7 +105,7 @@ void Goban::init_adjacent(int newsize)
   }
 }
 
-void Goban::init_diagonals(int newsize)
+void Goban::init_diagonals()
 {
 
   for (int k = 1; k <= size2; k++) {
@@ -127,7 +127,7 @@ void Goban::init_diagonals(int newsize)
 }
 
 //Precomputed 8 neighbours, to be used in pattern matching. Order matters.
-void Goban::init_vicinity(int newsize)
+void Goban::init_vicinity()
 {  
   for (int i = 0; i <= size2; i++) {
     for (int j = 0; j < 16; j++) {
@@ -165,7 +165,7 @@ void Goban::init_vicinity(int newsize)
   }
 }
 
-void Goban::init_distance(int newsize)
+void Goban::init_distance()
 {
   for (int p = 0; p <= size2; p++) {
     int d = (p-1)%size < (p-1)/size ? (p-1)%size : (p-1)/size;
@@ -179,7 +179,7 @@ void Goban::init_distance(int newsize)
   }
 }
 
-void Goban::init_manhattan(int newsize)
+void Goban::init_manhattan()
 {
   for (int p = 1; p <= size2; p++) {
     for (int dis = 1; dis <= 4; dis++) {
@@ -253,11 +253,12 @@ int Goban::set_size(int newsize)
 {
   size = (newsize <= MAXSIZE) ? newsize : size;
   size2 = size*size;
-  init_adjacent(newsize);
-  init_diagonals(newsize);
-  init_vicinity(newsize);
-  init_distance(newsize);
-  init_manhattan(newsize);
+  init_adjacent();
+  init_diagonals();
+  init_vicinity();
+  init_distance();
+  init_manhattan();
+  clear();
   return size;
 }
 

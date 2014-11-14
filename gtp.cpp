@@ -35,7 +35,10 @@
 
 using namespace std;
   
-GTP::GTP():go_engine(&main_goban){}
+GTP::GTP():go_engine(&main_goban)
+{
+  early_pass = true;
+}
 
 int GTP::GTP_loop()
 {
@@ -161,6 +164,9 @@ int GTP::exec(){
       break;
     case KGS_TIME_SETTINGS:
       kgs_time_settings();
+      break;
+    case KGS_GENMOVE_CLEANUP:
+      kgs_genmove_cleanup();
       break;
     default:
       unknown_command();

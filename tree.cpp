@@ -91,7 +91,7 @@ void Node::set_amaf(int result, const AmafBoard &amaf, bool side, int depth)
 
 double Node::get_value(double parent_visits) const
 {
-  const double BIAS = 1.0/3000, UCTK = 0;
+  const double BIAS = 1.0/3000, UCTK = 0.0;
   if (visits) {
     if (rave_visits) {
       double beta = rave_visits/(rave_visits + visits + rave_visits*visits*BIAS);
@@ -141,11 +141,10 @@ void Node::print(int boardsize) const
     std::cerr << std::right << std::setw(4) << mv
      << ": " << std::right << std::setw(6) << results/visits
      << "/" << std::left << std::setw(5) << visits
-     << "| RAVE: " << std::right<< std::setw(6) << rave_results/rave_visits
+     << "[ RAVE: " << std::right<< std::setw(6) << rave_results/rave_visits
      << "/" << std::left << std::setw(5) << rave_visits
      << " Prior: " << std::right << std::setw(6) << prior_results/prior_visits
-     << "/" << std::left << std::setw(5) << prior_visits
-     << "Value: " << std::setw(6) << get_value(1) << "\n";
+     << "/" << std::left << std::setw(5) << prior_visits << "]\n";
 }
 
 Tree::Tree(int maxsize, Goban *goban)
@@ -246,7 +245,7 @@ int Tree::expand(Node *parent, const int *moves, int nmovs, const Prior priors[]
 void Tree::print(Node *node, int threshold, int depth) const
 {
   for (int i = 0; i < depth; i++) std::cerr << "  ";
-  std::cerr << "->";
+  std::cerr << "|->";
   node->print(goban->get_size());
   
   Node *childs[MAXSIZE2] = {0};
@@ -279,9 +278,12 @@ void Tree::print() const
   Node *best = get_best();
   std::cerr << "#Expected: " << best->get_value(1) << ", visits "
             << best->get_visits() << " PV:\n";
+
+  bool side = !goban->get_side();
   for (Node *n = root[active]->get_best_child(); n; n = n->get_best_child()) {
-      std::cerr << "*";
+      side ? std::cerr << "B" :  std::cerr << "W";
       n->print(goban->get_size());
+      side = !side;
   }
   std::cerr << "\n";
 }

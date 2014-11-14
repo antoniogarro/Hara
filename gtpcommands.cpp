@@ -73,10 +73,10 @@ void GTP::boardsize()
     if(cmd_int_args[0] != main_goban.set_size(cmd_int_args[0])){
       response[0] = '?';
       response.append("unacceptable size");
+    } else {
+      go_engine.reset();
     }
-    else go_engine.reset();
-  }
-  else{
+  } else {
     response[0] = '?';
     response.append("syntax error");
   }
@@ -92,8 +92,7 @@ void GTP::komi()
 {
   if(cmd_args.size() > 0){
     main_goban.set_komi(cmd_int_args[0]);
-  }
-  else{
+  } else {
     response[0] = '?';
     response.append("syntax error");
   }
@@ -111,18 +110,24 @@ void GTP::play()
       if(main_goban.play_move(coord, color) == -1){
         response[0] = '?';
         response.append("illegal move");
+      } else {
+        go_engine.report_move(coord);
       }
-      else go_engine.report_move(coord);
-    }
-    else{
+    } else {
       response[0] = '?';
       response.append("invalid color or coordinate");
     }
-  }
-  else{
+  } else {
     response[0] = '?';
     response.append("syntax error");
   }
+}
+
+void GTP::kgs_genmove_cleanup()
+{
+  early_pass = false;
+  genmove();
+  early_pass = true;
 }
 
 void GTP::genmove()
@@ -133,17 +138,17 @@ void GTP::genmove()
       main_goban.play_move(0, !color);
       go_engine.report_move(0);
     }
-    int move = go_engine.generate_move();
+    int move = go_engine.generate_move(early_pass);
     main_goban.play_move(move, color);
     go_engine.report_move(move);
     print_coordinate(move);
-  }
-  else{
+  } else {
     response[0] = '?';
     response.append("syntax error");
   }
     
 }
+
 
 void GTP::unknown_command()
 {
@@ -162,8 +167,7 @@ void GTP::fixed_handicap()
   if(cmd_int_args.size() > 0 && cmd_int_args[0] > 1 && cmd_int_args[0] < 10){
     if(main_goban.set_fixed_handicap(cmd_int_args[0]) != cmd_int_args[0]){
     }
-  }
-  else{
+  } else {
     response[0] = '?';
     response.append("syntax error");
   }
@@ -173,8 +177,7 @@ void GTP::level()
 {
   if(cmd_int_args.size() > 0 && cmd_int_args[0] > 0){
     go_engine.set_playouts(10000*cmd_int_args[0]);
-  }
-  else{
+  } else {
     response[0] = '?';
     response.append("syntax error");
   }
@@ -184,8 +187,7 @@ void GTP::time_settings()
 {
   if(cmd_int_args.size() > 2){
     go_engine.set_times(cmd_int_args[0], cmd_int_args[1], cmd_int_args[2]);
-  }
-  else{
+  } else {
     response[0] = '?';
     response.append("syntax error");
   }

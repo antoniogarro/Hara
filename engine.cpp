@@ -85,27 +85,27 @@ int Engine::play_random_game(bool heavy)
     int move = heavy ? main_goban->play_heavy() : main_goban->play_random();
     amaf.play(move, ++simul_len);
     rand_movs++;
-    if (!move) pass++;
+    if (move == Goban::PASS) pass++;
     else pass = 0;
-    #ifdef DEBUG_INFO
+#ifdef DEBUG_INFO
       main_goban->print_goban();
-    #endif
+#endif
     int mercy = main_goban->mercy();    
     if (mercy != -1) {
       return 1-mercy;
     }
-    //#ifdef DEBUG_INFO
-    if (simul_len > 3*main_goban->get_size2()) {
+//#ifdef DEBUG_INFO
+    if (simul_len > 2*main_goban->get_size2()) {
       std::cerr << "WARNING: Simulation exceeded max length.\n";
       discarded++;
       return -1;
     }
-    //#endif
+//#endif
   }
     return (main_goban->chinese_count() > 0) ? 1:0;
 }
 
-int Engine::generate_move()
+int Engine::generate_move(bool early_pass)
 {
   const int EXPAND = 8;
   const double RESIGN_THRESHOLD = 0.10, PASS_THRESHOLD = 0.90;
@@ -125,7 +125,7 @@ int Engine::generate_move()
       node_history[nnode_hist++] = node;
       node = node->select_child();
       int move = node->get_move();
-      if(!move) pass++;
+      if(move == Goban::PASS) pass++;
       else pass = 0;
       main_goban->play_move(move);
       amaf.play(move, ++simul_len);
@@ -134,29 +134,28 @@ int Engine::generate_move()
       Prior priors[MAXSIZE2+1] = {0};
       int legal_moves[MAXSIZE2+1];
       int nlegal = main_goban->legal_moves(legal_moves);
-      main_goban->init_priors(priors);
+      //main_goban->init_priors(priors);
       tree.expand(node, legal_moves, nlegal, priors); //TODO: break if expand fails.
     }
     node_history[nnode_hist++] = node;
-    int result = play_random_game(0); //Black wins.
-    #ifdef DEBUG_INFO
+    int result = play_random_game(HEAVY); //Black wins.
+#ifdef DEBUG_INFO
       main_goban->print_goban();
       std::cerr << result << "\n";
-    #endif
+#endif
     main_goban->restore();
     if (result == -1) continue;
     if (side) result = 1-result;    
     back_up_results(result, node_history, nnode_hist, side);
-    #ifdef DEBUG_INFO
+#ifdef DEBUG_INFO
       tree.print();
-    #endif
+#endif
   }
   Node *best = tree.get_best();
-  if (best == 0) return 0;
   print_PV();
-  
+  if (best == Goban::PASS) return Goban::PASS;
   if (best->get_value(1) < RESIGN_THRESHOLD) return -1;
-  if (best->get_value(1) >= PASS_THRESHOLD && !root->get_move()) return 0;
+  if (early_pass && best->get_value(1) >= PASS_THRESHOLD && !root->get_move()) return Goban::PASS;
   return best->get_move();
 }
 
@@ -188,7 +187,7 @@ float Engine::score(std::vector<int> *dead)
   int score_table[MAXSIZE2+1] = {0};
   for (int i = 0; i < PLAYOUTS; i++) {
     simul_len = 0;
-    play_random_game(0);
+    play_random_game(LIGHT);
     main_goban->score_area(score_table);
     main_goban->restore();
   }
@@ -213,7 +212,7 @@ void Engine::perft(int max)
 {
   for (int i = 0; i < max; i++) {
     simul_len = 0;
-    play_random_game(0);
+    play_random_game(LIGHT);
     std::cerr << "restoring\n";
     main_goban->restore();
   }

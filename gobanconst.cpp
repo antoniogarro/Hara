@@ -177,30 +177,29 @@ bool Goban::is_true_eye(int point, bool color, int consider_occupied) const
   }
   return false;
 }
-//#define FALSE_EYES
+#define FALSE_EYES
 #ifdef FALSE_EYES
 bool Goban::is_virtual_eye(int point, bool color) const
 {
-  int i, nopponent = 0;
   if (!is_surrounded(point, color)) return false;
-  for (i = 0; int diag=diagonals[point][i]; i++) {
-    if (points[diag] && points[diag]->get_color() != color) {
+  int nopponent = 0;
+  for (int i = 0; i < 4; i++) {
+    if (int diag = diagonals[point][i]) {
+      if (points[diag] && points[diag]->get_color() != color) {
+        nopponent++;                                          
+      } 
+    } else {
       nopponent++;
+      break;
     }
   }
-  if (i == 4) {
-    if (nopponent >= 2) return false;
-  } else if (nopponent > 0) {
-      return false;
-  }
-  return true;
+  return nopponent < 2;
 }
 #else
 bool Goban::is_virtual_eye(int point, bool color) const
 {
-  int i, nopponent = 0;
   if (!is_surrounded(point, color)) return false;
-  for (i = 0; int adj=adjacent[point][i]; i++) {
+  for (int i = 0; int adj=adjacent[point][i]; i++) {
     if (points[adj]->has_one_liberty()) return false;
   }
   return true;   

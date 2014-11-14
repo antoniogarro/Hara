@@ -45,7 +45,7 @@ int Goban::random_choose(const PList &list, bool(Goban::*Policy)(int, bool) cons
       return point;
     }
   }
-  return 0;
+  return PASS;
 }
 
 bool Goban::random_policy(int point, bool side) const
@@ -61,7 +61,7 @@ bool Goban::heavy_policy(int point, bool side) const
   if (is_virtual_eye(point, side)) return false;
   if (!is_legal(point, side)) return false;
   if (is_self_atari(point, side)) return false;
-  //if (fast_ladder(point,side)) return false;
+  if (fast_ladder(point,side)) return false;
   return true;
 }
 
@@ -78,24 +78,24 @@ int Goban::play_heavy()
 
   if (last_point) {
     PointSet<MAXSIZE2> list;
-    /*
     save_heuristic(last_point, list);
     if (int move = random_choose(list, &Goban::heavy_policy)) {
       return play_move(move);
     }
     list.clear();
-        */
     pattern_heuristic(last_point, list);
     if (int move = random_choose(list, &Goban::heavy_policy)) {
       return play_move(move);
     }
     list.clear();
-  
+#define CAPTURE_HEURISTICS 
+#ifdef CAPTURE_HEURISTICS   //Redundant?
     capture_heuristic(last_point, list);
     if (int move = random_choose(list, &Goban::heavy_policy)) {
       return play_move(move);
     }
     list.clear();
+#endif
   }
   return play_random();
 }
@@ -136,7 +136,7 @@ void Goban::capture_heuristic(int point, PList &list) const
 {
   for (int i = 0; i < 8; i++) {
     Group *group = points[vicinity[point][i]];
-    if (group != 0 && group->get_color() != side && group->get_nliberties() == 1) {
+    if (group && group->get_color() != side && group->has_one_liberty()) {
       //atari_escapes(group, list);??
       int lib = group->get_liberty(0);
       if (gains_liberties(lib, group)) {
@@ -196,7 +196,7 @@ bool Goban::stones_around(int point, int distance) const
   return false;
 }
 
-int Goban::total_liberties(int point, bool color, PList *liberties, int enough = 0, const Group *exclude=0) const
+int Goban::total_liberties(int point, bool color, PList *liberties, int enough=0, const Group *exclude=0) const
 {
   PointSet<MAXSIZE2> libs;
   if (liberties) point_liberties(point, *liberties);
@@ -300,7 +300,6 @@ bool Goban::fast_ladder(int point, bool color) const
     int p = point, act = 0;
     while (distance_to_edge[p] > 1) {
       p = p + delta[act];
-      
       //look for ladder breakers. TODO: complete.
       if (points[p]) {
         if (points[p]->get_color() == color) break;
@@ -344,22 +343,22 @@ bool Goban::bad_self_atari(int point, bool color) const
   //Only handle throw-ins up to 2 stones:?
   //if (neighbours_size(point, color) < 2) {
     if (total_liberties(last_lib, !color, 0) < 2) {
-  #ifdef DEBUG_INFO
+#ifdef DEBUG_INFO
       std::cerr << "snapback\n";
-  #endif  
+#endif  
       return false;
     }
     if (creates_eyes(point, !color) && !creates_eyes(last_lib, !color)) {
-    #ifdef DEBUG_INFO
+#ifdef DEBUG_INFO
         std::cerr << "throw-in\n";
-    #endif
+#endif
       return false;
     }
   //}
   if (nakade_shape(point, color)) {
-  #ifdef DEBUG_INFO
+#ifdef DEBUG_INFO
     std::cerr << "nakade\n";
-  #endif
+#endif
     return false;
   }
   return true;
@@ -424,8 +423,8 @@ bool Goban::match_mogo_pattern(int point, bool side) const
   if (point == 1 || point == size || point == size2 || point == size*(size-1)+1) return false;  //filter corners.
   
   if (point > size && point % size && point <= size*(size-1) && point % size != 1) {
+    const int *vic = vicinity[point];
     for (int i = 1; i < 8; i+=2) {
-      const int *vic = vicinity[point];
       if (points[vic[i]]) {
         bool adj_color = points[vic[i]]->get_color();
         if (points[vic[i-1]] && points[vic[i-1]]->get_color() != adj_color) {
@@ -437,13 +436,13 @@ bool Goban::match_mogo_pattern(int point, bool side) const
               return true;  //Hane2
             }
           }
-          if (points[vic[i+2]] == 0 && points[vic[i+4]] == 0
-            && points[vic[i+6]] && points[vic[i+6]]->get_color() != adj_color) {
+          if (points[vic[i+2]] == 0 && points[vic[i+4]] == 0 &&
+              points[vic[i+6]] && points[vic[i+6]]->get_color() != adj_color) {
               return true;  //Hane3
           }
           if (points[vic[i+6]] && points[vic[i+6]]->get_color() == adj_color) {
-            if ((points[vic[i+2]] || points[vic[i+4]] == 0 || points[vic[i+4]]->get_color() == adj_color) 
-              && (points[vic[i+4]] || points[vic[i+2]] == 0 || points[vic[i+2]]->get_color() == adj_color)) {
+            if ((points[vic[i+2]] || points[vic[i+4]] == 0 || points[vic[i+4]]->get_color() == adj_color) &&
+                (points[vic[i+4]] || points[vic[i+2]] == 0 || points[vic[i+2]]->get_color() == adj_color)) {
               return true;  //Cut1
             }
           }
@@ -454,26 +453,26 @@ bool Goban::match_mogo_pattern(int point, bool side) const
               return true;  //Mirror Hane2
             }
           }
-          if (points[vic[i+4]] == 0 && points[vic[i+6]] == 0
-            && points[vic[i+2]] && points[vic[i+2]]->get_color() != adj_color) {
+          if (points[vic[i+4]] == 0 && points[vic[i+6]] == 0 &&
+              points[vic[i+2]] && points[vic[i+2]]->get_color() != adj_color) {
               return true;  //Mirror Hane3
           }
         }
-        if (points[vic[i+2]] && points[vic[i+6]] && points[vic[i+2]]->get_color() != adj_color
-          && points[vic[i+6]]->get_color() != adj_color
-          &&(points[vic[i+4]] == 0 || points[vic[i+4]]->get_color() == adj_color)
-          &&(points[vic[i+3]] == 0 || points[vic[i+3]]->get_color() == adj_color)
-          &&(points[vic[i+5]] == 0 || points[vic[i+5]]->get_color() == adj_color)) {
+        if (points[vic[i+2]] && points[vic[i+6]] && points[vic[i+2]]->get_color() != adj_color &&
+            points[vic[i+6]]->get_color() != adj_color &&
+            (points[vic[i+4]] == 0 || points[vic[i+4]]->get_color() == adj_color) &&
+            (points[vic[i+3]] == 0 || points[vic[i+3]]->get_color() == adj_color) &&
+            (points[vic[i+5]] == 0 || points[vic[i+5]]->get_color() == adj_color)) {
           return true;  //Cut2
         }
-        if (adj_color != side && points[vic[i-1]] && points[vic[i-1]]->get_color() == side
-          && points[vic[i+2]] == 0 && points[vic[i+4]] == 0
-          && points[vic[i+6]] == 0 && points[vic[i+1]] && points[vic[i+1]]->get_color() == adj_color) {
-            return true;  //Hane4
+        if (adj_color != side && points[vic[i-1]] && points[vic[i-1]]->get_color() == side &&
+            points[vic[i+2]] == 0 && points[vic[i+4]] == 0 && points[vic[i+6]] == 0 &&
+            points[vic[i+1]] && points[vic[i+1]]->get_color() == adj_color) {
+          return true;  //Hane4
         }
-        if (adj_color != side && points[vic[i+1]] && points[vic[i+1]]->get_color() == side
-          && points[vic[i+2]] == 0 && points[vic[i+4]] == 0
-          && points[vic[i+6]] == 0 && points[vic[i-1]] && points[vic[i-1]]->get_color() == adj_color) {
+        if (adj_color != side && points[vic[i+1]] && points[vic[i+1]]->get_color() == side &&
+            points[vic[i+2]] == 0 && points[vic[i+4]] == 0 && points[vic[i+6]] == 0 &&
+            points[vic[i-1]] && points[vic[i-1]]->get_color() == adj_color) {
           return true;  //Mirror Hane4
         }
       }
@@ -483,12 +482,12 @@ bool Goban::match_mogo_pattern(int point, bool side) const
       const int *vic = vicinity[point];
       if (vic[i]) {
         if (points[vic[i]]) {
-          if (vic[i+2] && points[vic[i+2]] && points[vic[i+2]]->get_color() != points[vic[i]]->get_color()
-            && (vic[i+6]==0 || points[vic[i+6]] == 0 || points[vic[i+6]]->get_color() != points[vic[i]]->get_color())) {
+          if (vic[i+2] && points[vic[i+2]] && points[vic[i+2]]->get_color() != points[vic[i]]->get_color() &&
+             (vic[i+6]==0 || points[vic[i+6]] == 0 || points[vic[i+6]]->get_color() != points[vic[i]]->get_color())) {
             return true;  //Side2
           }
-          if (vic[i+6] && points[vic[i+6]] && points[vic[i+6]]->get_color() != points[vic[i]]->get_color()
-            && (vic[i+2]== 0 || points[vic[i+2]] == 0 || points[vic[i+2]]->get_color() != points[vic[i]]->get_color())) {
+          if (vic[i+6] && points[vic[i+6]] && points[vic[i+6]]->get_color() != points[vic[i]]->get_color() &&
+             (vic[i+2]== 0 || points[vic[i+2]] == 0 || points[vic[i+2]]->get_color() != points[vic[i]]->get_color())) {
             return true;  //Mirror Side2
           }
           if (points[vic[i]]->get_color() == side) {
@@ -513,16 +512,16 @@ bool Goban::match_mogo_pattern(int point, bool side) const
               if (vic[i+6] == 0 || points[vic[i+6]] == 0 || points[vic[i+6]]->get_color() == side) {
                 return true;  //Mirror Side4
               }
-              if (vic[i+6] && points[vic[i+6]] && points[vic[i+6]]->get_color() != side
-                && vic[i+2] && points[vic[i+2]] && points[vic[i+2]]->get_color() == side) {
+              if (vic[i+6] && points[vic[i+6]] && points[vic[i+6]]->get_color() != side &&
+                  vic[i+2] && points[vic[i+2]] && points[vic[i+2]]->get_color() == side) {
                 return true; //Mirror Side5
               }
             }
           }
-        } else if ((vic[i+6] && points[vic[i+6]] && vic[i-1] && points[vic[i-1]]
-            && points[vic[i+6]]->get_color() != points[vic[i-1]]->get_color())
-          || (vic[i+2] && points[vic[i+2]] && vic[i+1] && points[vic[i+1]]
-            && points[vic[i+2]]->get_color() != points[vic[i+1]]->get_color())) {
+        } else if ((vic[i+6] && points[vic[i+6]] && vic[i-1] && points[vic[i-1]] &&
+                    points[vic[i+6]]->get_color() != points[vic[i-1]]->get_color())
+               || (vic[i+2] && points[vic[i+2]] && vic[i+1] && points[vic[i+1]] &&
+                    points[vic[i+2]]->get_color() != points[vic[i+1]]->get_color())) {
           return true;  //Side1 and mirror.
         }
       }

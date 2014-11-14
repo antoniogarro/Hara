@@ -44,7 +44,6 @@ struct Prior{
 class Goban{
 private:
   static const bool BLACK = 0, WHITE = 1;
-  static const int PASS = 0;
   bool side;
   int ko_point;
   int size, size2;
@@ -73,11 +72,11 @@ private:
 #ifdef ZOBRIST
   mutable Zobrist zobrist;
 #endif  
-  void init_adjacent(int newsize);
-  void init_diagonals(int newsize);
-  void init_vicinity(int newsize);
-  void init_distance(int newsize);
-  void init_manhattan(int newsize);
+  void init_adjacent();
+  void init_diagonals();
+  void init_vicinity();
+  void init_distance();
+  void init_manhattan();
   void reset();
   
   //4-neighbours iterating methods:
@@ -128,6 +127,7 @@ private:
   bool match_mogo_pattern(int,bool) const;
   
 public:
+  static const int PASS = 0;
   Goban(int size = 9);
   void clear();
   void restore();

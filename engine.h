@@ -39,6 +39,8 @@
 
 class Engine{
  private:
+  const bool HEAVY = true, LIGHT = false;
+  
   Goban *main_goban;
   int tree_size, max_playouts;
   int rand_movs, simul_len, discarded;
@@ -58,7 +60,7 @@ class Engine{
   void set_times(int main_time, int byo_time, int stones);
   void set_times(int time_left, int stones);
   float score(std::vector<int> *dead);
-  int generate_move();
+  int generate_move(bool early_pass);
   void perft(int max);
   void report_move(int move) { tree.promote(move); }
 };

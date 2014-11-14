@@ -45,7 +45,7 @@
 class GTP{
 
 private:
-  bool loop;
+  bool loop, early_pass;
   int cmd;
   std::string cmd_id;
   std::string cmd_name;
@@ -69,6 +69,7 @@ private:
   void komi();
   void play();
   void genmove();
+  void kgs_genmove_cleanup();
   void unknown_command();
   void showboard();
   void fixed_handicap();
@@ -79,17 +80,16 @@ private:
   void final_score();
   void final_status_list();
   
-  
   enum {PROTOCOL_VERSION, NAME, VERSION, KNOWN_COMMAND, LIST_COMMANDS,
         QUIT, BOARDSIZE, CLEAR_BOARD, KOMI, PLAY, GENMOVE, SHOWBOARD,
         FIXED_HANDICAP, LEVEL,TIME_SETTINGS, TIME_LEFT, FINAL_SCORE,
-        FINAL_STATUS_LIST, KGS_TIME_SETTINGS, NCOMMANDS};
+        FINAL_STATUS_LIST, KGS_TIME_SETTINGS, KGS_GENMOVE_CLEANUP, NCOMMANDS};
 
   const std::string COMMANDS[NCOMMANDS]=
         {"protocol_version","name","version","known_command","list_commands",
          "quit","boardsize","clear_board","komi","play","genmove","showboard",
          "fixed_handicap","level","time_settings","time_left","final_score",
-         "final_status_list","kgs-time_settings"};
+         "final_status_list","kgs-time_settings", "kgs-genmove_cleanup"};
       
   int parse(const std::string&);
   int string_to_cmd(const std::string&);

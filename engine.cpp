@@ -153,7 +153,7 @@ int Engine::generate_move(bool early_pass)
   }
   Node *best = tree.get_best();
   print_PV();
-  if (best == Goban::PASS) return Goban::PASS;
+  if (best->get_move() == Goban::PASS) return Goban::PASS;
   if (best->get_value(1) < RESIGN_THRESHOLD) return -1;
   if (early_pass && best->get_value(1) >= PASS_THRESHOLD && !root->get_move()) return Goban::PASS;
   return best->get_move();
